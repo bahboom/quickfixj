@@ -345,6 +345,9 @@ public class Session implements Closeable {
 
     private boolean enabled;
 
+    /** ML **/
+    private boolean forceGenerateLogon = false;
+
     private final String responderSync = new String("SessionResponderSync");
     // @GuardedBy(responderSync)
     private Responder responder;
@@ -691,7 +694,7 @@ public class Session implements Closeable {
     	if(!hasResponder() && ioSessInitiator != null) {
     		ioSessInitiator.reconnect();
     	}
-    	
+    	forceGenerateLogon = true;
     	logon();
     }
 
@@ -1832,6 +1835,10 @@ public class Session implements Closeable {
     }
 
     private boolean isTimeToGenerateLogon() {
+        if(forceGenerateLogon) {
+            forceGenerateLogon = false;
+            return true;
+        }
         return SystemTime.currentTimeMillis() - lastSessionLogon >= computeNextLogonDelayMillis();
     }
 
@@ -1880,10 +1887,6 @@ public class Session implements Closeable {
             state.setLastExpectedLogonNextSeqNum(nextExpectedMsgNum);
         }
         return sendRaw(logon, 0);
-    }
-
-    public void reconnect() {
-    	
     }
     
     /**

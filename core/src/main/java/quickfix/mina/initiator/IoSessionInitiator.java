@@ -19,26 +19,11 @@
 
 package quickfix.mina.initiator;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.security.GeneralSecurityException;
-import java.util.Arrays;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.mina.common.ConnectFuture;
-import org.apache.mina.common.IoConnector;
-import org.apache.mina.common.IoFilterChainBuilder;
-import org.apache.mina.common.IoServiceConfig;
-import org.apache.mina.common.IoSession;
-import org.apache.mina.common.ThreadModel;
+import org.apache.mina.common.*;
 import org.apache.mina.filter.SSLFilter;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import quickfix.ConfigError;
 import quickfix.LogUtil;
 import quickfix.Session;
@@ -50,6 +35,15 @@ import quickfix.mina.ProtocolFactory;
 import quickfix.mina.message.FIXProtocolCodecFactory;
 import quickfix.mina.ssl.SSLContextFactory;
 import quickfix.mina.ssl.SSLSupport;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.security.GeneralSecurityException;
+import java.util.Arrays;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class IoSessionInitiator {
     private final static long CONNECT_POLL_TIMEOUT = 2000L;
@@ -81,7 +75,7 @@ public class IoSessionInitiator {
     }
 
     private static class ConnectTask implements Runnable {
-    	private boolean scheduledReconnect = false;
+    	private volatile boolean scheduledReconnect = false;
         private final SocketAddress[] socketAddresses;
         private final SocketAddress localAddress;
         private final IoConnector ioConnector;
@@ -218,6 +212,7 @@ public class IoSessionInitiator {
         
         public void scheduleReconnect() {
         	scheduledReconnect = true;
+            run();
         }
 
         private boolean shouldReconnect() {
